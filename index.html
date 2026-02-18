@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesMap – Mappa Commerciali</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <span class="nav-icon">🌍</span>
+        <span class="nav-title">SalesMap</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          Mappa
+        </a>
+        <a href="admin.html" class="nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Amministrazione
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN LAYOUT -->
+  <div class="page-layout">
+    <!-- MAP -->
+    <div class="map-wrapper">
+      <div id="chartdiv"></div>
+    </div>
+
+    <!-- LEGEND PANEL -->
+    <aside class="legend-panel">
+      <div class="legend-header">
+        <h3>Commerciali</h3>
+        <span id="legend-count" class="legend-count"></span>
+      </div>
+      <div id="legend-content">
+        <p class="legend-empty">
+          Nessun commerciale configurato.<br />
+          <a href="admin.html">Vai all'Amministrazione</a> per aggiungerne.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- amCharts 5 -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
+  <!-- App JS -->
+  <script src="js/countries.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/map.js"></script>
+</body>
+</html>
