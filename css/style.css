@@ -28,6 +28,7 @@
 
 html, body {
   height: 100%;
+  overflow: hidden;           /* no page-level scroll anywhere */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -117,7 +118,7 @@ a:hover { text-decoration: underline; }
 .map-wrapper {
   flex: 1;
   position: relative;
-  background: #dbeafe;
+  background: #1a5c8a;        /* deep ocean blue – sea colour */
   overflow: hidden;
 }
 
@@ -229,9 +230,10 @@ a:hover { text-decoration: underline; }
 =========================== */
 .admin-container {
   max-width: 960px;
-  margin: 0 auto;
-  padding: calc(var(--navbar-h) + 36px) 24px 40px;
-  min-height: 100vh;
+  margin: var(--navbar-h) auto 0;
+  padding: 36px 24px 40px;
+  height: calc(100vh - var(--navbar-h));  /* fills the viewport below navbar */
+  overflow-y: auto;                        /* scrolls internally, not the page */
 }
 
 .admin-header {

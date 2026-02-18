@@ -54,7 +54,7 @@ function buildColorPresets() {
       style="background:${c}"
       data-color="${c}"
       title="${c}"
-      aria-label="Colore ${c}"
+      aria-label="Color ${c}"
     ></button>`).join('');
 
   container.addEventListener('click', e => {
@@ -165,9 +165,9 @@ function renderRepsGrid() {
     const extra     = countries.length - maxShow;
 
     const tagsHtml = countries.length === 0
-      ? '<span class="rep-no-countries">Nessun paese assegnato</span>'
+      ? '<span class="rep-no-countries">No countries assigned</span>'
       : shown.map(c => `<span class="country-tag-badge">${escHtml(COUNTRY_MAP[c] || c)}</span>`).join('')
-        + (extra > 0 ? `<span class="more-badge">+${extra} altri</span>` : '');
+        + (extra > 0 ? `<span class="more-badge">+${extra} more</span>` : '');
 
     const card = document.createElement('div');
     card.className = 'rep-card';
@@ -177,15 +177,15 @@ function renderRepsGrid() {
         <span class="rep-name">${escHtml(rep.name)}</span>
       </div>
       <div class="rep-card-body">
-        <p class="rep-countries-label">Paesi di competenza</p>
+        <p class="rep-countries-label">Assigned Countries</p>
         <div class="rep-countries-tags">${tagsHtml}</div>
       </div>
       <div class="rep-card-footer">
         <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${rep.id}">
-          ✏️ Modifica
+          ✏️ Edit
         </button>
         <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;" data-action="delete" data-id="${rep.id}">
-          🗑️ Elimina
+          🗑️ Delete
         </button>
       </div>`;
 
@@ -199,7 +199,7 @@ function renderRepsGrid() {
 function confirmDelete(rep) {
   pendingDeleteId = rep.id;
   document.getElementById('confirm-message').textContent =
-    `Sei sicuro di voler eliminare "${rep.name}"? Questa azione non può essere annullata.`;
+    `Are you sure you want to delete "${rep.name}"? This action cannot be undone.`;
   confirmOverlay.classList.remove('hidden');
 }
 
@@ -214,13 +214,13 @@ function openModal(id) {
     // Edit mode
     const rep = Store.getSalesRepById(id);
     if (!rep) return;
-    modalTitle.textContent = 'Modifica Commerciale';
+    modalTitle.textContent = 'Edit Sales Rep';
     repNameInput.value = rep.name;
     setColor(rep.color);
     selectedCodes = new Set(rep.countries || []);
   } else {
     // Add mode
-    modalTitle.textContent = 'Aggiungi Commerciale';
+    modalTitle.textContent = 'Add Sales Rep';
     repNameInput.value = '';
     setColor(PRESET_COLORS[0]);
   }
@@ -294,7 +294,7 @@ function renderCountryList() {
   }
 
   if (list.length === 0) {
-    countryList.innerHTML = `<p class="country-list-empty">Nessun paese trovato.</p>`;
+    countryList.innerHTML = `<p class="country-list-empty">No countries found.</p>`;
     return;
   }
 
@@ -340,7 +340,7 @@ function renderSelectedTags() {
     return `
       <span class="selected-tag">
         ${escHtml(name)}
-        <button class="selected-tag-remove" data-code="${code}" title="Rimuovi" aria-label="Rimuovi ${escHtml(name)}">✕</button>
+        <button class="selected-tag-remove" data-code="${code}" title="Remove" aria-label="Remove ${escHtml(name)}">✕</button>
       </span>`;
   }).join('');
 

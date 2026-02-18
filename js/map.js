@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
+  // Set the chart background to the same ocean blue as the CSS wrapper
+  root.container.set('background', am5.Rectangle.new(root, {
+    fill: am5.color('#1a5c8a'),
+    fillOpacity: 1
+  }));
+
   // Polygon series (countries)
   const polygonSeries = chart.series.push(
     am5map.MapPolygonSeries.new(root, {
@@ -39,18 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
+  // Default land colour: warm beige/tan — high contrast against the blue ocean
   polygonSeries.mapPolygons.template.setAll({
     interactive: true,
     stroke: am5.color(0xffffff),
     strokeWidth: 0.6,
+    strokeOpacity: 0.5,
     tooltipText: '{name}',
-    fill: am5.color(0xe2e8f0)
+    fill: am5.color(0xc8b98a)   // sandy/tan for unassigned countries
   });
 
-  // Hover state – slightly darken via fillOpacity trick
+  // Default hover state
   polygonSeries.mapPolygons.template.states.create('hover', {
-    fillOpacity: 0.78,
-    strokeWidth: 1.2
+    fill: am5.color(0xb0a070),
+    strokeWidth: 1.2,
+    strokeOpacity: 1
   });
 
   // Zoom control
@@ -58,34 +67,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Colour countries once geodata has loaded ─────────────────
   polygonSeries.events.on('datavalidated', () => {
-    applyColors(polygonSeries, root);
+    applyColors(polygonSeries);
     renderLegend();
   });
 });
 
 /* ── Apply per-country colours from Store ────────────────────── */
-function applyColors(polygonSeries, root) {
+function applyColors(polygonSeries) {
   const repMap = Store.getCountryRepMap();   // { "IT": rep, ... }
 
   polygonSeries.mapPolygons.each(polygon => {
-    const id = polygon.dataItem?.get('id');
+    const id  = polygon.dataItem?.get('id');
     const rep = id ? repMap[id] : null;
 
     if (rep) {
       polygon.set('fill', am5.color(rep.color));
-      polygon.set('tooltipText', `{name}\n[bold]Commerciale:[/] ${rep.name}`);
+      polygon.set('tooltipText', `{name}\n[bold]Sales Rep:[/] ${rep.name}`);
 
       // Hover: lighter shade of the rep colour
       polygon.states.create('hover', {
         fill: am5.color(lighten(rep.color, 35)),
-        strokeWidth: 1.2
+        strokeWidth: 1.2,
+        strokeOpacity: 1
       });
     } else {
-      polygon.set('fill', am5.color(0xe2e8f0));
+      polygon.set('fill', am5.color(0xc8b98a));
       polygon.set('tooltipText', '{name}');
       polygon.states.create('hover', {
-        fill: am5.color(0xc4cdd8),
-        strokeWidth: 1.2
+        fill: am5.color(0xb0a070),
+        strokeWidth: 1.2,
+        strokeOpacity: 1
       });
     }
   });
@@ -104,21 +115,21 @@ function renderLegend() {
   if (reps.length === 0) {
     legendContent.innerHTML = `
       <p class="legend-empty">
-        Nessun commerciale configurato.<br/>
-        <a href="admin.html">Vai all'Amministrazione</a> per aggiungerne.
+        No sales reps configured yet.<br/>
+        <a href="admin.html">Go to Administration</a> to add some.
       </p>`;
     return;
   }
 
   legendContent.innerHTML = reps.map(rep => {
-    const n = (rep.countries || []).length;
-    const label = n === 1 ? '1 paese' : `${n} paesi`;
+    const n     = (rep.countries || []).length;
+    const label = n === 1 ? '1 country' : `${n} countries`;
     return `
       <div class="legend-item">
         <div class="legend-color" style="background:${rep.color}"></div>
         <div class="legend-info">
           <span class="legend-name">${escHtml(rep.name)}</span>
-          <span class="legend-countries">${n > 0 ? label : 'Nessun paese assegnato'}</span>
+          <span class="legend-countries">${n > 0 ? label : 'No countries assigned'}</span>
         </div>
       </div>`;
   }).join('');
