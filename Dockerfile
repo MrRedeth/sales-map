@@ -1,15 +1,15 @@
-# ── Stage: serve static files with nginx ──────────────────────
-FROM nginx:alpine
+# ── Stage: run Express server ──────────────────────────────────
+FROM node:20-alpine
 
-# Remove default nginx page
-RUN rm -rf /usr/share/nginx/html/*
+WORKDIR /app
 
-# Copy app files
-COPY . /usr/share/nginx/html
+# Install dependencies first (layer cache)
+COPY package.json ./
+RUN npm install --omit=dev
 
-# Override nginx site config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the rest of the app
+COPY . .
 
-EXPOSE 80
+EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "server/index.js"]

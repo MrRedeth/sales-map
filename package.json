@@ -1,0 +1,13 @@
+{
+  "name": "sales-map",
+  "version": "1.0.0",
+  "description": "Interactive world map for sales territory assignment",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

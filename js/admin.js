@@ -1,5 +1,6 @@
 /**
- * admin.js – Admin panel logic: CRUD for sales reps, country search/select.
+ * admin.js – Admin panel: CRUD for sales reps, country search/select.
+ * Store is async (fetch-based) so all data operations use async/await.
  */
 
 /* ── Preset colours ─────────────────────────────────────────── */
@@ -10,26 +11,26 @@ const PRESET_COLORS = [
 ];
 
 /* ── State ───────────────────────────────────────────────────── */
-let editingId       = null;    // null = adding, string = editing
-let selectedCodes   = new Set(); // currently selected country codes
-let activeTab       = 'all';   // 'all' | 'selected'
+let editingId       = null;
+let selectedCodes   = new Set();
+let activeTab       = 'all';
 let pendingDeleteId = null;
 
 /* ── DOM refs ────────────────────────────────────────────────── */
-const repsGrid         = document.getElementById('reps-grid');
-const emptyState       = document.getElementById('empty-state');
-const modalOverlay     = document.getElementById('modal-overlay');
-const confirmOverlay   = document.getElementById('confirm-overlay');
-const modalTitle       = document.getElementById('modal-title');
-const repNameInput     = document.getElementById('rep-name');
-const repColorInput    = document.getElementById('rep-color');
-const colorHexLabel    = document.getElementById('color-hex-label');
-const nameError        = document.getElementById('name-error');
-const countrySearch    = document.getElementById('country-search');
-const searchClearBtn   = document.getElementById('search-clear-btn');
-const countryList      = document.getElementById('country-list');
-const selectedTagsEl   = document.getElementById('selected-tags');
-const selectedCountEl  = document.getElementById('selected-count');
+const repsGrid        = document.getElementById('reps-grid');
+const emptyState      = document.getElementById('empty-state');
+const modalOverlay    = document.getElementById('modal-overlay');
+const confirmOverlay  = document.getElementById('confirm-overlay');
+const modalTitle      = document.getElementById('modal-title');
+const repNameInput    = document.getElementById('rep-name');
+const repColorInput   = document.getElementById('rep-color');
+const colorHexLabel   = document.getElementById('color-hex-label');
+const nameError       = document.getElementById('name-error');
+const countrySearch   = document.getElementById('country-search');
+const searchClearBtn  = document.getElementById('search-clear-btn');
+const countryList     = document.getElementById('country-list');
+const selectedTagsEl  = document.getElementById('selected-tags');
+const selectedCountEl = document.getElementById('selected-count');
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 function escHtml(s) {
@@ -38,11 +39,11 @@ function escHtml(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/* ── Init ─────────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
+/* ── Init ────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
   buildColorPresets();
   bindEvents();
-  renderRepsGrid();
+  await renderRepsGrid();
 });
 
 /* ── Color presets ───────────────────────────────────────────── */
@@ -67,33 +68,27 @@ function buildColorPresets() {
 function setColor(hex) {
   repColorInput.value = hex;
   colorHexLabel.textContent = hex.toUpperCase();
-  // Highlight selected preset
   document.querySelectorAll('.preset-dot').forEach(b => {
     b.classList.toggle('selected', b.dataset.color === hex);
   });
 }
 
-/* ── Bind global events ───────────────────────────────────────── */
+/* ── Bind global events ──────────────────────────────────────── */
 function bindEvents() {
-  // Open "add" modal
   document.getElementById('add-rep-btn').addEventListener('click', () => openModal(null));
 
-  // Modal close buttons
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('cancel-btn').addEventListener('click', closeModal);
   modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
 
-  // Save
   document.getElementById('save-btn').addEventListener('click', saveRep);
 
-  // Color input change
   repColorInput.addEventListener('input', () => {
     colorHexLabel.textContent = repColorInput.value.toUpperCase();
     document.querySelectorAll('.preset-dot').forEach(b =>
       b.classList.toggle('selected', b.dataset.color === repColorInput.value));
   });
 
-  // Country search
   countrySearch.addEventListener('input', () => {
     searchClearBtn.classList.toggle('hidden', !countrySearch.value);
     renderCountryList();
@@ -104,11 +99,9 @@ function bindEvents() {
     renderCountryList();
   });
 
-  // Tabs
   document.getElementById('tab-all').addEventListener('click', () => switchTab('all'));
   document.getElementById('tab-selected').addEventListener('click', () => switchTab('selected'));
 
-  // Country list delegation (checkbox + row click)
   countryList.addEventListener('change', e => {
     if (e.target.classList.contains('country-checkbox')) {
       const code = e.target.dataset.code;
@@ -126,21 +119,19 @@ function bindEvents() {
     updateSelectedUI();
   });
 
-  // Confirm delete
   document.getElementById('confirm-cancel-btn').addEventListener('click', () => {
     confirmOverlay.classList.add('hidden');
     pendingDeleteId = null;
   });
-  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+  document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
     if (pendingDeleteId) {
-      Store.deleteSalesRep(pendingDeleteId);
+      await Store.deleteSalesRep(pendingDeleteId);
       pendingDeleteId = null;
     }
     confirmOverlay.classList.add('hidden');
-    renderRepsGrid();
+    await renderRepsGrid();
   });
 
-  // Keyboard close
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (!modalOverlay.classList.contains('hidden')) closeModal();
@@ -152,9 +143,9 @@ function bindEvents() {
   });
 }
 
-/* ── Reps grid ────────────────────────────────────────────────── */
-function renderRepsGrid() {
-  const reps = Store.getSalesReps();
+/* ── Reps grid ───────────────────────────────────────────────── */
+async function renderRepsGrid() {
+  const reps = await Store.getSalesReps();
   emptyState.classList.toggle('hidden', reps.length > 0);
   repsGrid.innerHTML = '';
 
@@ -195,7 +186,7 @@ function renderRepsGrid() {
   });
 }
 
-/* ── Confirm delete ───────────────────────────────────────────── */
+/* ── Confirm delete ──────────────────────────────────────────── */
 function confirmDelete(rep) {
   pendingDeleteId = rep.id;
   document.getElementById('confirm-message').textContent =
@@ -204,22 +195,20 @@ function confirmDelete(rep) {
 }
 
 /* ── Modal open / close ──────────────────────────────────────── */
-function openModal(id) {
+async function openModal(id) {
   editingId = id;
   selectedCodes = new Set();
   nameError.classList.add('hidden');
   repNameInput.classList.remove('error');
 
   if (id) {
-    // Edit mode
-    const rep = Store.getSalesRepById(id);
+    const rep = await Store.getSalesRepById(id);
     if (!rep) return;
     modalTitle.textContent = 'Edit Sales Rep';
     repNameInput.value = rep.name;
     setColor(rep.color);
     selectedCodes = new Set(rep.countries || []);
   } else {
-    // Add mode
     modalTitle.textContent = 'Add Sales Rep';
     repNameInput.value = '';
     setColor(PRESET_COLORS[0]);
@@ -242,12 +231,11 @@ function closeModal() {
 }
 
 /* ── Save rep ────────────────────────────────────────────────── */
-function saveRep() {
-  const name  = repNameInput.value.trim();
-  const color = repColorInput.value;
+async function saveRep() {
+  const name      = repNameInput.value.trim();
+  const color     = repColorInput.value;
   const countries = [...selectedCodes];
 
-  // Validate
   if (!name) {
     nameError.classList.remove('hidden');
     repNameInput.classList.add('error');
@@ -258,13 +246,13 @@ function saveRep() {
   repNameInput.classList.remove('error');
 
   if (editingId) {
-    Store.updateSalesRep(editingId, { name, color, countries });
+    await Store.updateSalesRep(editingId, { name, color, countries });
   } else {
-    Store.addSalesRep({ name, color, countries });
+    await Store.addSalesRep({ name, color, countries });
   }
 
   closeModal();
-  renderRepsGrid();
+  await renderRepsGrid();
 }
 
 /* ── Country list rendering ──────────────────────────────────── */
@@ -277,22 +265,16 @@ function switchTab(tab, render = true) {
 
 function renderCountryList() {
   const query = countrySearch.value.toLowerCase().trim();
-
   let list = COUNTRIES;
 
-  // Filter by search
   if (query) {
     list = list.filter(c =>
-      c.name.toLowerCase().includes(query) ||
-      c.code.toLowerCase().includes(query)
+      c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
     );
   }
-
-  // Filter by tab
   if (activeTab === 'selected') {
     list = list.filter(c => selectedCodes.has(c.code));
   }
-
   if (list.length === 0) {
     countryList.innerHTML = `<p class="country-list-empty">No countries found.</p>`;
     return;
@@ -302,13 +284,8 @@ function renderCountryList() {
     const checked = selectedCodes.has(c.code);
     return `
       <div class="country-item${checked ? ' checked' : ''}">
-        <input
-          type="checkbox"
-          class="country-checkbox"
-          id="cb-${c.code}"
-          data-code="${c.code}"
-          ${checked ? 'checked' : ''}
-        />
+        <input type="checkbox" class="country-checkbox" id="cb-${c.code}"
+          data-code="${c.code}" ${checked ? 'checked' : ''} />
         <label class="country-label" for="cb-${c.code}">${escHtml(c.name)}</label>
         <span class="country-code">${c.code}</span>
       </div>`;
@@ -320,8 +297,6 @@ function updateSelectedUI() {
   selectedCountEl.textContent = selectedCodes.size;
   renderCountryList();
   renderSelectedTags();
-
-  // Also refresh the checked state for visible items (needed when clicking row)
   countryList.querySelectorAll('.country-item').forEach(item => {
     const cb = item.querySelector('.country-checkbox');
     if (cb) item.classList.toggle('checked', cb.checked);
@@ -330,17 +305,15 @@ function updateSelectedUI() {
 
 function renderSelectedTags() {
   selectedCountEl.textContent = selectedCodes.size;
-  if (selectedCodes.size === 0) {
-    selectedTagsEl.innerHTML = '';
-    return;
-  }
+  if (selectedCodes.size === 0) { selectedTagsEl.innerHTML = ''; return; }
 
   selectedTagsEl.innerHTML = [...selectedCodes].map(code => {
     const name = COUNTRY_MAP[code] || code;
     return `
       <span class="selected-tag">
         ${escHtml(name)}
-        <button class="selected-tag-remove" data-code="${code}" title="Remove" aria-label="Remove ${escHtml(name)}">✕</button>
+        <button class="selected-tag-remove" data-code="${code}"
+          title="Remove" aria-label="Remove ${escHtml(name)}">✕</button>
       </span>`;
   }).join('');
 

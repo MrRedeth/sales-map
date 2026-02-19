@@ -1,5 +1,6 @@
 /**
  * map.js – initialises amCharts 5 world map and colours countries by sales rep.
+ * Store methods are async (fetch-based), so map functions are async too.
  */
 
 /* ── Colour utilities ─────────────────────────────────────────── */
@@ -16,11 +17,9 @@ function lighten(hex, amount = 30) {
 
 /* ── Map initialisation ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  // Create root
   const root = am5.Root.new('chartdiv');
   root.setThemes([am5themes_Animated.new(root)]);
 
-  // Create chart
   const chart = root.container.children.push(
     am5map.MapChart.new(root, {
       projection: am5map.geoMercator(),
@@ -37,44 +36,41 @@ document.addEventListener('DOMContentLoaded', () => {
     fillOpacity: 1
   }));
 
-  // Polygon series (countries)
   const polygonSeries = chart.series.push(
     am5map.MapPolygonSeries.new(root, {
       geoJSON: am5geodata_worldLow,
-      exclude: ['AQ']       // hide Antarctica for a cleaner look
+      exclude: ['AQ']
     })
   );
 
-  // Default land colour: warm beige/tan — high contrast against the blue ocean
+  // Default land colour: white, dark border
   polygonSeries.mapPolygons.template.setAll({
     interactive: true,
     stroke: am5.color(0x333333),
     strokeWidth: 0.7,
     strokeOpacity: 1,
     tooltipText: '{name}',
-    fill: am5.color(0xffffff)   // white for unassigned countries
+    fill: am5.color(0xffffff)
   });
 
-  // Default hover state
   polygonSeries.mapPolygons.template.states.create('hover', {
     fill: am5.color(0xe0e0e0),
     strokeWidth: 1.2,
     strokeOpacity: 1
   });
 
-  // Zoom control
   chart.set('zoomControl', am5map.ZoomControl.new(root, {}));
 
-  // ── Colour countries once geodata has loaded ─────────────────
-  polygonSeries.events.on('datavalidated', () => {
-    applyColors(polygonSeries);
-    renderLegend();
+  // Colour countries once geodata has loaded
+  polygonSeries.events.on('datavalidated', async () => {
+    await applyColors(polygonSeries);
+    await renderLegend();
   });
 });
 
 /* ── Apply per-country colours from Store ────────────────────── */
-function applyColors(polygonSeries) {
-  const repMap = Store.getCountryRepMap();   // { "IT": rep, ... }
+async function applyColors(polygonSeries) {
+  const repMap = await Store.getCountryRepMap();
 
   polygonSeries.mapPolygons.each(polygon => {
     const id  = polygon.dataItem?.get('id');
@@ -83,8 +79,6 @@ function applyColors(polygonSeries) {
     if (rep) {
       polygon.set('fill', am5.color(rep.color));
       polygon.set('tooltipText', `{name}\n[bold]Sales Rep:[/] ${rep.name}`);
-
-      // Hover: lighter shade of the rep colour
       polygon.states.create('hover', {
         fill: am5.color(lighten(rep.color, 35)),
         strokeWidth: 1.2,
@@ -103,12 +97,12 @@ function applyColors(polygonSeries) {
 }
 
 /* ── Legend ──────────────────────────────────────────────────── */
-function renderLegend() {
+async function renderLegend() {
   const legendContent = document.getElementById('legend-content');
   const legendCount   = document.getElementById('legend-count');
   if (!legendContent) return;
 
-  const reps = Store.getSalesReps();
+  const reps = await Store.getSalesReps();
   legendCount.textContent = reps.length || '';
   legendCount.style.display = reps.length ? 'inline-block' : 'none';
 

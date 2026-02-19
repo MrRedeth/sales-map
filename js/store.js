@@ -1,65 +1,52 @@
 /**
- * Store – manages sales rep data in localStorage.
+ * Store – fetches and saves sales rep data via the REST API.
+ * All methods return Promises (async/await friendly).
  */
 const Store = (() => {
-  const KEY = 'salesMapData';
+  const BASE = '/api/salesreps';
 
-  function getData() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : { salesReps: [] };
-    } catch (e) {
-      return { salesReps: [] };
-    }
+  async function getSalesReps() {
+    const res = await fetch(BASE);
+    if (!res.ok) throw new Error('Failed to load sales reps');
+    return res.json();
   }
 
-  function saveData(data) {
-    localStorage.setItem(KEY, JSON.stringify(data));
+  async function getSalesRepById(id) {
+    const reps = await getSalesReps();
+    return reps.find(r => r.id === id) || null;
   }
 
-  function getSalesReps() {
-    return getData().salesReps;
+  async function addSalesRep({ name, color, countries }) {
+    const res = await fetch(BASE, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, color, countries: countries || [] })
+    });
+    if (!res.ok) throw new Error('Failed to add sales rep');
+    return res.json();
   }
 
-  function getSalesRepById(id) {
-    return getSalesReps().find(r => r.id === id) || null;
+  async function updateSalesRep(id, { name, color, countries }) {
+    const res = await fetch(`${BASE}/${id}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, color, countries: countries || [] })
+    });
+    if (!res.ok) throw new Error('Failed to update sales rep');
+    return res.json();
   }
 
-  function addSalesRep({ name, color, countries }) {
-    const data = getData();
-    const rep = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      name: name.trim(),
-      color,
-      countries: countries || []
-    };
-    data.salesReps.push(rep);
-    saveData(data);
-    return rep;
-  }
-
-  function updateSalesRep(id, { name, color, countries }) {
-    const data = getData();
-    const idx = data.salesReps.findIndex(r => r.id === id);
-    if (idx === -1) return null;
-    data.salesReps[idx] = { id, name: name.trim(), color, countries: countries || [] };
-    saveData(data);
-    return data.salesReps[idx];
-  }
-
-  function deleteSalesRep(id) {
-    const data = getData();
-    data.salesReps = data.salesReps.filter(r => r.id !== id);
-    saveData(data);
+  async function deleteSalesRep(id) {
+    const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete sales rep');
   }
 
   /** Returns { "IT": repObject, "DE": repObject, ... } */
-  function getCountryRepMap() {
-    const map = {};
-    getSalesReps().forEach(rep => {
-      (rep.countries || []).forEach(code => {
-        map[code] = rep;
-      });
+  async function getCountryRepMap() {
+    const reps = await getSalesReps();
+    const map  = {};
+    reps.forEach(rep => {
+      (rep.countries || []).forEach(code => { map[code] = rep; });
     });
     return map;
   }
