@@ -145,7 +145,18 @@ function bindEvents() {
 
 /* ── Reps grid ───────────────────────────────────────────────── */
 async function renderRepsGrid() {
-  const reps = await Store.getSalesReps();
+  let reps;
+  try {
+    reps = await Store.getSalesReps();
+  } catch (err) {
+    console.error('Could not load sales reps:', err);
+    repsGrid.innerHTML = `
+      <div class="api-error">
+        ⚠️ Could not connect to the server. Make sure the Node.js backend is running.
+      </div>`;
+    emptyState.classList.add('hidden');
+    return;
+  }
   emptyState.classList.toggle('hidden', reps.length > 0);
   repsGrid.innerHTML = '';
 
@@ -186,7 +197,7 @@ async function renderRepsGrid() {
   });
 }
 
-/* ── Confirm delete ──────────────────────────────────────────── */
+/* ── Confirm delete ─────────────────────────────────────────── */
 function confirmDelete(rep) {
   pendingDeleteId = rep.id;
   document.getElementById('confirm-message').textContent =
@@ -199,10 +210,18 @@ async function openModal(id) {
   editingId = id;
   selectedCodes = new Set();
   nameError.classList.add('hidden');
+  document.getElementById('save-error').classList.add('hidden');
   repNameInput.classList.remove('error');
 
   if (id) {
-    const rep = await Store.getSalesRepById(id);
+    let rep;
+    try {
+      rep = await Store.getSalesRepById(id);
+    } catch (err) {
+      console.error('Could not load rep:', err);
+      alert('Could not load sales rep data. Check the server connection.');
+      return;
+    }
     if (!rep) return;
     modalTitle.textContent = 'Edit Sales Rep';
     repNameInput.value = rep.name;
@@ -245,14 +264,27 @@ async function saveRep() {
   nameError.classList.add('hidden');
   repNameInput.classList.remove('error');
 
-  if (editingId) {
-    await Store.updateSalesRep(editingId, { name, color, countries });
-  } else {
-    await Store.addSalesRep({ name, color, countries });
-  }
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
 
-  closeModal();
-  await renderRepsGrid();
+  try {
+    if (editingId) {
+      await Store.updateSalesRep(editingId, { name, color, countries });
+    } else {
+      await Store.addSalesRep({ name, color, countries });
+    }
+    closeModal();
+    await renderRepsGrid();
+  } catch (err) {
+    console.error('Save failed:', err);
+    const saveError = document.getElementById('save-error');
+    saveError.textContent = 'Save failed – check the server connection.';
+    saveError.classList.remove('hidden');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save';
+  }
 }
 
 /* ── Country list rendering ──────────────────────────────────── */

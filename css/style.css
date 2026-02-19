@@ -156,6 +156,7 @@ a:hover { text-decoration: underline; }
 }
 
 .legend-count {
+  display: none;               /* hidden until JS populates it */
   background: var(--accent);
   color: white;
   font-size: 11px;
@@ -753,6 +754,20 @@ a:hover { text-decoration: underline; }
   transition: color var(--transition);
 }
 .selected-tag-remove:hover { color: #9B284F; }
+
+/* ===========================
+   API ERROR STATE
+=========================== */
+.api-error {
+  grid-column: 1 / -1;
+  background: #fff8f8;
+  border: 1.5px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  font-size: 14px;
+  text-align: center;
+}
 
 /* ===========================
    SCROLLBAR (global)
