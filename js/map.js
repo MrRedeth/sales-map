@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Set the chart background to the same ocean blue as the CSS wrapper
   root.container.set('background', am5.Rectangle.new(root, {
-    fill: am5.color('#1a5c8a'),
+    fill: am5.color('#f2f2f2'),
     fillOpacity: 1
   }));
 
@@ -48,9 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Default land colour: warm beige/tan — high contrast against the blue ocean
   polygonSeries.mapPolygons.template.setAll({
     interactive: true,
-    stroke: am5.color(0xffffff),
-    strokeWidth: 0.6,
-    strokeOpacity: 0.5,
+    stroke: am5.color(0xbbbbbb),
+    strokeWidth: 0.7,
+    strokeOpacity: 1,
     tooltipText: '{name}',
     fill: am5.color(0xc8b98a)   // sandy/tan for unassigned countries
   });
