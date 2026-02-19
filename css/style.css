@@ -2,18 +2,18 @@
    CSS Variables & Reset
 =========================== */
 :root {
-  --primary: #1e3a5f;
-  --primary-hover: #16304f;
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
+  --primary: #BE295B;        /* CAENels crimson */
+  --primary-hover: #9B284F;  /* CAENels dark crimson */
+  --accent: #BE295B;
+  --accent-hover: #9B284F;
   --danger: #EF4444;
   --danger-hover: #DC2626;
-  --bg: #F1F5F9;
+  --bg: #F2F2F2;             /* CAENels light grey */
   --surface: #ffffff;
-  --border: #E2E8F0;
-  --text: #1E293B;
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
+  --border: #E0DEDE;
+  --text: #333333;           /* CAENels dark text */
+  --text-secondary: #5C5C6E;
+  --text-muted: #9A9AAF;
   --navbar-h: 60px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
@@ -384,7 +384,7 @@ a:hover { text-decoration: underline; }
   background: var(--accent);
   color: #fff;
 }
-.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(59,130,246,0.35); }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(190,41,91,0.35); }
 
 .btn-secondary {
   background: var(--surface);
@@ -536,7 +536,7 @@ a:hover { text-decoration: underline; }
 
 .form-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  box-shadow: 0 0 0 3px rgba(190,41,91,0.15);
 }
 
 .form-input.error { border-color: var(--danger); }
@@ -688,12 +688,12 @@ a:hover { text-decoration: underline; }
   user-select: none;
 }
 .country-item:hover { background: var(--bg); }
-.country-item.checked { background: #EFF6FF; }
+.country-item.checked { background: #FFF0F4; }
 
 .country-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent);
+  accent-color: #BE295B;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -731,9 +731,9 @@ a:hover { text-decoration: underline; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  color: #1D4ED8;
+  background: #FFF0F4;
+  border: 1px solid #F2A0BA;
+  color: #9B284F;
   font-size: 12px;
   font-weight: 500;
   padding: 3px 9px 3px 10px;
@@ -744,7 +744,7 @@ a:hover { text-decoration: underline; }
   background: none;
   border: none;
   cursor: pointer;
-  color: #93C5FD;
+  color: #E08AAA;
   font-size: 14px;
   line-height: 1;
   padding: 0;
@@ -752,7 +752,7 @@ a:hover { text-decoration: underline; }
   align-items: center;
   transition: color var(--transition);
 }
-.selected-tag-remove:hover { color: #1D4ED8; }
+.selected-tag-remove:hover { color: #9B284F; }
 
 /* ===========================
    SCROLLBAR (global)
