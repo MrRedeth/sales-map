@@ -48,16 +48,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Default land colour: warm beige/tan — high contrast against the blue ocean
   polygonSeries.mapPolygons.template.setAll({
     interactive: true,
-    stroke: am5.color(0xbbbbbb),
+    stroke: am5.color(0x333333),
     strokeWidth: 0.7,
     strokeOpacity: 1,
     tooltipText: '{name}',
-    fill: am5.color(0xc8b98a)   // sandy/tan for unassigned countries
+    fill: am5.color(0xffffff)   // white for unassigned countries
   });
 
   // Default hover state
   polygonSeries.mapPolygons.template.states.create('hover', {
-    fill: am5.color(0xb0a070),
+    fill: am5.color(0xe0e0e0),
     strokeWidth: 1.2,
     strokeOpacity: 1
   });
@@ -91,10 +91,10 @@ function applyColors(polygonSeries) {
         strokeOpacity: 1
       });
     } else {
-      polygon.set('fill', am5.color(0xc8b98a));
+      polygon.set('fill', am5.color(0xffffff));
       polygon.set('tooltipText', '{name}');
       polygon.states.create('hover', {
-        fill: am5.color(0xb0a070),
+        fill: am5.color(0xe0e0e0),
         strokeWidth: 1.2,
         strokeOpacity: 1
       });
