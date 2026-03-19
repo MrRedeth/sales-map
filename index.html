@@ -37,6 +37,17 @@
           Administration
         </a>
       </div>
+      <!-- Country search -->
+      <div class="nav-search" id="nav-search">
+        <div class="nav-search-input-wrap">
+          <svg class="nav-search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="country-search-bar" class="nav-search-input" placeholder="Search country…" autocomplete="off" />
+          <button class="nav-search-clear hidden" id="nav-search-clear">✕</button>
+        </div>
+        <div class="nav-search-dropdown hidden" id="nav-search-dropdown"></div>
+      </div>
     </div>
   </nav>
 
@@ -69,6 +80,7 @@
   <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 
   <!-- App JS -->
+  <script src="js/regions.js"></script>
   <script src="js/countries.js"></script>
   <script src="js/store.js"></script>
   <script src="js/map.js"></script>

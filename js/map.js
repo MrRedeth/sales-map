@@ -1,6 +1,5 @@
 /**
- * map.js – initialises amCharts 5 world map and colours countries by sales rep.
- * Store methods are async (fetch-based), so map functions are async too.
+ * map.js – amCharts 5 world map with country colouring, search, and zoom.
  */
 
 /* ── Colour utilities ─────────────────────────────────────────── */
@@ -14,6 +13,10 @@ function lighten(hex, amount = 30) {
   const clamp = v => Math.min(255, v + amount);
   return `#${[clamp(r), clamp(g), clamp(b)].map(v => v.toString(16).padStart(2, '0')).join('')}`;
 }
+
+/* ── Module-level refs (exposed for search zoom) ─────────────── */
+let _chart         = null;
+let _polygonSeries = null;
 
 /* ── Map initialisation ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
-  // Set the chart background to the same ocean blue as the CSS wrapper
   root.container.set('background', am5.Rectangle.new(root, {
     fill: am5.color('#f2f2f2'),
     fillOpacity: 1
@@ -43,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
-  // Default land colour: white, dark border
   polygonSeries.mapPolygons.template.setAll({
     interactive: true,
     stroke: am5.color(0x333333),
@@ -61,14 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chart.set('zoomControl', am5map.ZoomControl.new(root, {}));
 
-  // Colour countries once geodata has loaded
+  _chart         = chart;
+  _polygonSeries = polygonSeries;
+
   polygonSeries.events.on('datavalidated', async () => {
     await applyColors(polygonSeries);
     await renderLegend();
   });
+
+  initSearch();
 });
 
-/* ── Apply per-country colours from Store ────────────────────── */
+/* ── Apply per-country colours ────────────────────────────────── */
 async function applyColors(polygonSeries) {
   const repMap = await Store.getCountryRepMap();
 
@@ -86,7 +91,7 @@ async function applyColors(polygonSeries) {
       });
     } else {
       polygon.set('fill', am5.color(0xffffff));
-      polygon.set('tooltipText', '{name}');
+      polygon.set('tooltipText', '{name}\n[italic]Unassigned[/]');
       polygon.states.create('hover', {
         fill: am5.color(0xe0e0e0),
         strokeWidth: 1.2,
@@ -116,19 +121,96 @@ async function renderLegend() {
   }
 
   legendContent.innerHTML = reps.map(rep => {
-    const n     = (rep.countries || []).length;
-    const label = n === 1 ? '1 country' : `${n} countries`;
+    const summary = buildLegendSummary(rep);
+    const effCount = getEffectiveCountries(rep).length;
+    const countLabel = effCount === 1 ? '1 country' : `${effCount} countries`;
     return `
       <div class="legend-item">
         <div class="legend-color" style="background:${rep.color}"></div>
         <div class="legend-info">
           <span class="legend-name">${escHtml(rep.name)}</span>
-          <span class="legend-countries">${n > 0 ? label : 'No countries assigned'}</span>
+          <span class="legend-summary">${escHtml(summary || countLabel)}</span>
+          <span class="legend-countries">${countLabel}</span>
         </div>
       </div>`;
   }).join('');
 }
 
 function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Search bar ──────────────────────────────────────────────── */
+function initSearch() {
+  const input    = document.getElementById('country-search-bar');
+  const clearBtn = document.getElementById('nav-search-clear');
+  const dropdown = document.getElementById('nav-search-dropdown');
+  if (!input) return;
+
+  input.addEventListener('input', async () => {
+    const q = input.value.trim().toLowerCase();
+    clearBtn.classList.toggle('hidden', !q);
+    if (!q) { dropdown.classList.add('hidden'); dropdown.innerHTML = ''; return; }
+
+    const matches = COUNTRIES.filter(c =>
+      c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+    ).slice(0, 8);
+
+    if (matches.length === 0) {
+      dropdown.innerHTML = `<div class="search-no-result">No countries found</div>`;
+      dropdown.classList.remove('hidden');
+      return;
+    }
+
+    let repMap;
+    try { repMap = await Store.getCountryRepMap(); } catch { repMap = {}; }
+
+    dropdown.innerHTML = matches.map(c => {
+      const rep = repMap[c.code];
+      return `
+        <div class="search-result-item" data-code="${c.code}">
+          <span class="search-result-name">${escHtml(c.name)}</span>
+          <span class="search-result-code">${c.code}</span>
+          ${rep
+            ? `<span class="search-result-rep" style="color:${rep.color}">● ${escHtml(rep.name)}</span>`
+            : `<span class="search-result-rep unassigned">Unassigned</span>`}
+        </div>`;
+    }).join('');
+    dropdown.classList.remove('hidden');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.classList.add('hidden');
+    dropdown.classList.add('hidden');
+    dropdown.innerHTML = '';
+    input.focus();
+  });
+
+  dropdown.addEventListener('click', e => {
+    const item = e.target.closest('.search-result-item');
+    if (!item) return;
+    const code = item.dataset.code;
+    zoomToCountry(code);
+    input.value = '';
+    clearBtn.classList.add('hidden');
+    dropdown.classList.add('hidden');
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#nav-search')) {
+      dropdown.classList.add('hidden');
+    }
+  });
+}
+
+/* ── Zoom to country ─────────────────────────────────────────── */
+function zoomToCountry(code) {
+  if (!_chart || !_polygonSeries) return;
+  _polygonSeries.mapPolygons.each(polygon => {
+    if (polygon.dataItem?.get('id') === code) {
+      _chart.zoomToDataItem(polygon.dataItem);
+    }
+  });
 }
