@@ -16,21 +16,21 @@ const Store = (() => {
     return reps.find(r => r.id === id) || null;
   }
 
-  async function addSalesRep({ name, color, countries }) {
+  async function addSalesRep({ name, color, countries, regions, continents }) {
     const res = await fetch(BASE, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name, color, countries: countries || [] })
+      body:    JSON.stringify({ name, color, countries: countries || [], regions: regions || [], continents: continents || [] })
     });
     if (!res.ok) throw new Error('Failed to add sales rep');
     return res.json();
   }
 
-  async function updateSalesRep(id, { name, color, countries }) {
+  async function updateSalesRep(id, { name, color, countries, regions, continents }) {
     const res = await fetch(`${BASE}/${id}`, {
       method:  'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name, color, countries: countries || [] })
+      body:    JSON.stringify({ name, color, countries: countries || [], regions: regions || [], continents: continents || [] })
     });
     if (!res.ok) throw new Error('Failed to update sales rep');
     return res.json();
@@ -41,12 +41,12 @@ const Store = (() => {
     if (!res.ok) throw new Error('Failed to delete sales rep');
   }
 
-  /** Returns { "IT": repObject, "DE": repObject, ... } */
+  /** Returns { "IT": repObject, "DE": repObject, ... } using effective countries */
   async function getCountryRepMap() {
     const reps = await getSalesReps();
     const map  = {};
     reps.forEach(rep => {
-      (rep.countries || []).forEach(code => { map[code] = rep; });
+      getEffectiveCountries(rep).forEach(code => { map[code] = rep; });
     });
     return map;
   }
